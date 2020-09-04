@@ -5,13 +5,14 @@ from threading import Thread
 from queue import Queue
 import time
 import datetime
+from tqdm import tqdm
 
 HOST = "127.0.0.1"
 PORT = 4444
 CLIENTS = []
 THREADS = []
-NOW = datetime.datetime.now().strftime("%Y") + datetime.datetime.now().strftime(
-    "%m") + datetime.datetime.now().strftime("%d") + datetime.datetime.now().strftime("%H%M%S")
+NOW = datetime.datetime.now().strftime("%Y") + datetime.datetime.now().strftime("%m") + datetime.datetime.now().strftime("%d") + datetime.datetime.now().strftime("%H%M%S")
+
 
 def _decode(data):
     try:
@@ -21,6 +22,15 @@ def _decode(data):
             return data.decode("cp437")
         except UnicodeDecodeError:
             return data.decode(errors="replace")
+
+
+def recv_all(conn, buffer):
+    res = b''
+    data = conn.recv(buffer)
+    while data:
+        res += data
+        data = conn.recv(buffer)
+    return res
 
 
 def print_clients():
@@ -104,20 +114,26 @@ def shell(client, sock):
             if "exit" == cmd:
                 break
             elif 'download' in cmd:
-                size_file = conn.recv(5000)
-                data = conn.recv(int(size_file))
                 file_extension = "." + cmd.split(".")[1]
-                new_file = open(NOW + file_extension, "wb")
-                new_file.write(data)
-                new_file.close()
-                print("File " + NOW + file_extension + " has been downloaded")
-            if not cmd:
+                file_size = int(conn.recv(1024))
+                progress_bar = tqdm(total=file_size, unit='iB', unit_scale=True)
+                f = open("serverbis" + file_extension, "wb")
+                data_check = 0
+                print(file_size)
+                while data_check != int(file_size):
+                    data = conn.recv(1024)
+                    data_size = len(data)
+                    f.write(data)
+                    data_check = data_check + int(len(data))
+                    progress_bar.update(data_size)
+                progress_bar.close()
+                f.close()
+            elif not cmd:
                 print("Invalid command")
             else:
                 print(_decode(conn.recv(10000)))
-        except Exception:
-            print("Session ", client["session"], " close")
-            break
+        except Exception as e:
+            print(e)
 
 
 class ThreadConnect:
