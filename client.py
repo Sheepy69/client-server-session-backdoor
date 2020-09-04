@@ -4,7 +4,6 @@ import socket
 import time
 import subprocess
 import os
-import tqdm
 
 HOST = "127.0.0.1"
 PORT = 4444
